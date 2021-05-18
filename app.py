@@ -14,6 +14,7 @@ def create_app():
 
     # setup with the configuration provided
     app.config.from_object('config.DevelopmentConfig')
+    print(os.getcwd())
     db_session.global_init(absp("database/data.sqlite/"))  # init database
 
     #############
@@ -27,6 +28,10 @@ def create_app():
     # authentication
     from apps.auth.views import auth
     app.register_blueprint(auth)
+
+    # api
+    from apps.api.views import api
+    app.register_blueprint(api, url_prefix="/api")
 
     ##################
     # authentication #

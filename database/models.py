@@ -48,8 +48,7 @@ class Track(SqlAlchemyBase):
 
     def to_dict(self):
         return {
-            "if": self.track_id,
+            "id": self.track_id,
             "name": self.name,
-            "artist_id": self.artist_id,
-            "artist_name": Artist(artist_id=self.artist_id).name
+            "artist_id": self.artist_id
         }
