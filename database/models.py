@@ -44,6 +44,7 @@ class Track(SqlAlchemyBase):
 
     track_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, index=True, nullable=False)
+    uploaded_id = Column(Integer, ForeignKey('user.user_id'), index=True, nullable=False)
     artist_id = Column(Integer, ForeignKey('artist.artist_id'), index=True, nullable=False)
 
     def to_dict(self):

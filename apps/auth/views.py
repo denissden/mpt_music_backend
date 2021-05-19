@@ -18,8 +18,6 @@ def register():
 @auth.route("/register", methods=['POST'])
 def register_post():
     email = request.form.get('email')
-    first_name = request.form.get('first_name')
-    last_name = request.form.get('last_name')
     login_ = request.form.get('login')
     password = request.form.get('password')
 
@@ -28,12 +26,10 @@ def register_post():
 
     if len(login_) > 16:
         return "login is too long"
-
-    if len(last_name) > 16:
-        return "first name is too long"
-
-    if len(first_name) > 16:
-        return "first name is too long"
+    if len(login_) < 3:
+        return "login is too short"
+    if not functions.check_login(login_):
+        return "incorrect login"
 
     if not functions.check_email(email):
         return "incorrect email"
@@ -63,14 +59,20 @@ def register_post():
 
 @auth.route("/login", methods=['POST'])
 def login_post():
-    email = request.form.get('email')
+    login_ = request.form.get('login')
     password = request.form.get('password')
 
     s = db_session.create_session()
-    user = s.query(User).filter(User.email == email).first()
+
+    if functions.check_email(login_):
+        user = s.query(User).filter(User.email == login_).first()
+    elif functions.check_login(login_):
+        user = s.query(User).filter(User.login == login_).first()
+    else:
+        return "Incorrect login"
 
     if not user or not check_password_hash(user.password, password):
-        return "Incorrect email or password"
+        return "Incorrect email/login or password"
 
     login_user(user, remember=True)
     return "success"

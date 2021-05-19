@@ -1,5 +1,5 @@
 from flask import Flask, Response, Blueprint, request
-from flask_login import *
+from flask_login import login_required
 from database import db_session, models
 from apps import functions
 import os
@@ -7,6 +7,7 @@ import os
 stream = Blueprint('stream', __name__)
 
 
+@login_required
 @stream.route("/music/<music_id>")
 def stream_music(music_id):
     music_id = int(music_id)
