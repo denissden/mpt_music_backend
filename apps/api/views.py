@@ -7,12 +7,15 @@ import os
 api = Blueprint('api', __name__)
 
 
-@api.route("/music/<music_id>")
-def music_info(music_id):
-    music_id = int(music_id)
-
-    m = models.Track(id=music_id)
-    return m.to_dict()
+@api.route("/music/<track_id>")
+def music_info(track_id):
+    track_id = int(track_id)
+    s = db_session.create_session()
+    t = s.query(models.Track).filter(models.Track.track_id == track_id).first()
+    if t is not None:
+        return t.to_dict()
+    else:
+        return "fail"
 
 
 @api.route("/artist/<artist_id>")
@@ -23,8 +26,6 @@ def artist_info(artist_id):
 @login_required
 @api.route("/upload_track", methods=['POST'])
 def add_music():
-    print(request.files)
-    print(request.form)
     track_name = request.form.get('name')
     artist_id = request.form.get('artist_id')
 
@@ -53,3 +54,28 @@ def add_music():
         file.save(os.path.join("audio", f"{t.track_id}.mp3"))
     print(t.track_id)
     return 'success'
+
+
+@login_required
+@api.route("/create_playlist", methods=['POST'])
+def create_playlist():
+    playlist_name = request.form.get('name')
+    if len(playlist_name) < 1:
+        return 'name is too short'
+    elif len(playlist_name) > 128:
+        return 'name is too long'
+
+    s = db_session.create_session()
+    p = models.Playlist(name=playlist_name)
+    s.add(p)
+    s.commit()
+    return 'success'
+
+
+@login_required
+@api.route("/all_playlists", methods=['GET'])
+def load_playlists():
+    s = db_session.create_session()
+    res = s.query(models.Playlist).filter(models.Playlist.owner_id == current_user.user_id)
+
+    return [p.to_dict() for p in res]

@@ -53,3 +53,20 @@ class Track(SqlAlchemyBase):
             "name": self.name,
             "artist_id": self.artist_id
         }
+
+
+class Playlist(SqlAlchemyBase):
+    __tablename__ = 'playlist'
+
+    playlist_id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    content = Column(PickleType, nullable=False)
+    owner_id = Column(Integer, ForeignKey('user.user_id'), index=True)
+
+    def to_dict(self):
+        return {
+            "id": self.playlist_id,
+            "name": self.name,
+            "content": self.content,
+            "owner_id": self.owner_id
+        }
