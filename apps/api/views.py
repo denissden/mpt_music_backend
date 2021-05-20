@@ -87,9 +87,9 @@ def load_playlists():
 def get_playlist(playlist_id):
     playlist_id = int(playlist_id)
     s = db_session.create_session()
-    p = models.Playlist.query.get(playlist_id)
+    p = s.query(models.Playlist).get(playlist_id)
 
-    return p.to_dict()
+    return p.to_dict(True)
 
 
 @login_required
@@ -98,13 +98,16 @@ def add_to_playlist():
     playlist_id = int(request.form.get('playlist_id'))
     track_id = int(request.form.get('track_id'))
 
+    print("__ADD__", playlist_id, track_id)
     s = db_session.create_session()
-    p = models.Playlist.query.get(playlist_id)
+    p = s.query(models.Playlist).get(playlist_id)
     if p.owner_id == current_user.user_id:
-        if p.content is None:
-            p.content = []
-        if models.Track.query.get(track_id) is not None:
-            p.content.append(track_id)
+        if s.query(models.Track).get(track_id) is not None:
+            if p.content is None:
+                p.content = [track_id]
+            else:
+                p.content = p.content + [track_id]
+            s.commit()
             return "success"
         else:
             return "track does not exist"
@@ -116,8 +119,12 @@ def add_to_playlist():
 @api.route("/search_tracks", methods=['POST'])
 def search_tracks():
     search_string = request.form.get('string')
+    if not 0 < len(search_string) < 20:
+        return "wrong string length"
 
     s = db_session.create_session()
-    tracks = s.query(models.Track).filter(models.Track.login.like(search_string + "%"))
-    return json.load([t.to_dict])
+    tracks = s.query(models.Track).filter(models.Track.name.like(search_string + "%")).limit(20)
+    res = [t.to_dict() for t in tracks]
+    print(res)
+    return json.dumps(res)
 

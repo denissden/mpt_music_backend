@@ -2,7 +2,7 @@ import datetime
 import enum
 from sqlalchemy import *
 from flask_login import UserMixin
-from database.db_session import SqlAlchemyBase
+from database.db_session import SqlAlchemyBase, create_session
 
 
 class User(UserMixin, SqlAlchemyBase):
@@ -32,6 +32,10 @@ class Artist(SqlAlchemyBase):
     artist_id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
 
+    @staticmethod
+    def get_by_id(id_):
+        return create_session().query(Artist).filter(Artist.artist_id == id_).first()
+
     def to_dict(self):
         return {
             "id": self.artist_id,
@@ -47,12 +51,16 @@ class Track(SqlAlchemyBase):
     uploaded_id = Column(Integer, ForeignKey('user.user_id'), index=True, nullable=False)
     artist_id = Column(Integer, ForeignKey('artist.artist_id'), index=True, nullable=False)
 
+    @staticmethod
+    def get_by_id(id_):
+        return create_session().query(Track).filter(Track.user_id == id_).first()
+
     def to_dict(self):
         return {
             "id": self.track_id,
             "name": self.name,
             "artist_id": self.artist_id,
-            "artist_name": Artist.query.get(self.artist_id).name
+            "artist_name": Artist.get_by_id(self.artist_id)
         }
 
 
@@ -67,8 +75,9 @@ class Playlist(SqlAlchemyBase):
     def to_dict(self, include_tracks=False):
         tracks = []
         if include_tracks and self.content is not None:
+            s = create_session()
             for i in self.content:
-                tracks.append(Track.query.get(i).to_dict())
+                tracks.append(s.query(Track).get(i).to_dict())
         return {
             "id": self.playlist_id,
             "name": self.name,

@@ -8,7 +8,7 @@ stream = Blueprint('stream', __name__)
 
 
 @login_required
-@stream.route("/music/<music_id>")
+@stream.route("/track/<music_id>")
 def stream_music(music_id):
     music_id = int(music_id)
 
