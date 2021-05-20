@@ -2,12 +2,13 @@ from flask import Flask, Response, Blueprint, request
 from flask_login import current_user, login_required
 from database import db_session, models
 from apps import functions
+import json
 import os
 
 api = Blueprint('api', __name__)
 
 
-@api.route("/music/<track_id>")
+@api.route("/track/<track_id>")
 def music_info(track_id):
     track_id = int(track_id)
     s = db_session.create_session()
@@ -66,10 +67,11 @@ def create_playlist():
         return 'name is too long'
 
     s = db_session.create_session()
-    p = models.Playlist(name=playlist_name)
+    p = models.Playlist(name=playlist_name, owner_id=current_user.user_id)
     s.add(p)
     s.commit()
-    return 'success'
+
+    return p.to_dict()
 
 
 @login_required
@@ -77,5 +79,45 @@ def create_playlist():
 def load_playlists():
     s = db_session.create_session()
     res = s.query(models.Playlist).filter(models.Playlist.owner_id == current_user.user_id)
+    return json.dumps([p.to_dict(True) for p in res]) if res is not None else None
 
-    return [p.to_dict() for p in res]
+
+@login_required
+@api.route("/playlist/<playlist_id>", methods=['GET'])
+def get_playlist(playlist_id):
+    playlist_id = int(playlist_id)
+    s = db_session.create_session()
+    p = models.Playlist.query.get(playlist_id)
+
+    return p.to_dict()
+
+
+@login_required
+@api.route("/add_to_playlist", methods=['POST'])
+def add_to_playlist():
+    playlist_id = int(request.form.get('playlist_id'))
+    track_id = int(request.form.get('track_id'))
+
+    s = db_session.create_session()
+    p = models.Playlist.query.get(playlist_id)
+    if p.owner_id == current_user.user_id:
+        if p.content is None:
+            p.content = []
+        if models.Track.query.get(track_id) is not None:
+            p.content.append(track_id)
+            return "success"
+        else:
+            return "track does not exist"
+    else:
+        return "you are not the owner of the playlist"
+
+
+@login_required
+@api.route("/search_tracks", methods=['POST'])
+def search_tracks():
+    search_string = request.form.get('string')
+
+    s = db_session.create_session()
+    tracks = s.query(models.Track).filter(models.Track.login.like(search_string + "%"))
+    return json.load([t.to_dict])
+

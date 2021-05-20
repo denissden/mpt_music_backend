@@ -51,7 +51,8 @@ class Track(SqlAlchemyBase):
         return {
             "id": self.track_id,
             "name": self.name,
-            "artist_id": self.artist_id
+            "artist_id": self.artist_id,
+            "artist_name": Artist.query.get(self.artist_id).name
         }
 
 
@@ -60,13 +61,18 @@ class Playlist(SqlAlchemyBase):
 
     playlist_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
-    content = Column(PickleType, nullable=False)
-    owner_id = Column(Integer, ForeignKey('user.user_id'), index=True)
+    content = Column(PickleType, nullable=True)
+    owner_id = Column(Integer, ForeignKey('user.user_id'), index=True, nullable=False)
 
-    def to_dict(self):
+    def to_dict(self, include_tracks=False):
+        tracks = []
+        if include_tracks and self.content is not None:
+            for i in self.content:
+                tracks.append(Track.query.get(i).to_dict())
         return {
             "id": self.playlist_id,
             "name": self.name,
             "content": self.content,
-            "owner_id": self.owner_id
+            "owner_id": self.owner_id,
+            "tracks": tracks
         }
