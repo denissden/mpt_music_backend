@@ -123,8 +123,25 @@ def search_tracks():
         return "wrong string length"
 
     s = db_session.create_session()
-    tracks = s.query(models.Track).filter(models.Track.name.like(search_string + "%")).limit(20)
+    tracks = s.query(models.Track).filter(models.Track.name.like("%" +search_string + "%")).limit(20)
     res = [t.to_dict() for t in tracks]
     print(res)
     return json.dumps(res)
 
+
+@login_required
+@api.route("/premium", methods=['GET'])
+def premium_get():
+    print("PREMIUM", str(current_user.premium))
+    return str(current_user.premium)
+
+
+@login_required
+@api.route("/premium", methods=['POST'])
+def premium_post():
+    state = bool(request.form.get('state'))
+    s = db_session.create_session()
+    u = s.query(models.User).get(current_user.user_id)
+    u.premium = not u.premium
+    s.commit()
+    return "success"

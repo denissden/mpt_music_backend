@@ -15,6 +15,7 @@ class User(UserMixin, SqlAlchemyBase):
     admin = Column(Boolean, nullable=False, default=False)
     created_date = Column(DateTime(timezone=True), default=datetime.datetime.now, nullable=False)
     artist_id = Column(Integer, ForeignKey('artist.artist_id'), nullable=True, unique=True)
+    premium = Column(Boolean, nullable=False, default=False)
 
     def get_id(self):
         return self.user_id
@@ -56,11 +57,12 @@ class Track(SqlAlchemyBase):
         return create_session().query(Track).filter(Track.user_id == id_).first()
 
     def to_dict(self):
+        s = create_session()
         return {
             "id": self.track_id,
             "name": self.name,
-            "artist_id": self.artist_id,
-            "artist_name": Artist.get_by_id(self.artist_id)
+            "artist_id": 0,
+            "artist_name": ""  # replaced artist with user (rollback later)
         }
 
 
