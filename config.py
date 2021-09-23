@@ -5,6 +5,10 @@ class Config(object):
     DEBUG = False
     TESTING = False
     CSRF_ENABLED = True
+
+    # just a random string
+    # do not put your secret here
+    # use environment variables
     SECRET_KEY = '57e19ea558d4eab644cfd3dee34a70'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
